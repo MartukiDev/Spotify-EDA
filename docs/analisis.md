@@ -24,9 +24,9 @@ El dataset corresponde a [Spotify Tracks Dataset](https://www.kaggle.com/dataset
 
 ![Distribución de popularidad](../figures/01_popularity_distribucion.png)
 
-La distribución de `popularity` presenta un **pico pronunciado cerca de 0**, lo que indica que la mayoría de canciones del catálogo tienen muy pocas reproducciones recientes. Esto responde en parte a la naturaleza del índice de Spotify: solo refleja actividad reciente, por lo que canciones antiguas o de nicho tienden a tener valores bajos independientemente de su calidad musical.
+La distribución de `popularity` es **aproximadamente simétrica** (media = 35.35, mediana = 37.00, skewness = −0.005), sin el sesgo hacia cero que suele observarse en otros datasets de Spotify. Esto se debe al diseño balanceado del dataset: al incluir 1.000 canciones por género, se captura tanto música popular como de nicho, distribuyendo el índice en todo el rango 0–100.
 
-La distribución es **asimétrica positiva** (skewness > 0): pocas canciones alcanzan valores altos. Esta característica tiene implicancias directas para el modelo predictivo, ya que los modelos lineales asumen distribuciones más simétricas en la variable objetivo.
+Solo el 2.3% de las canciones son *chart_topper* (popularidad > 75), lo que confirma que la cúspide de popularidad sigue siendo escasa incluso en un muestreo balanceado. La casi nula asimetría significa que los modelos de regresión no requieren transformación de la variable objetivo por motivos de distribución.
 
 ---
 
