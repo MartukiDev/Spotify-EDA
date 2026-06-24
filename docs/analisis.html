@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis — Anatomía de una canción popular</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+           line-height: 1.6; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #24292e; }
+    h1, h2, h3 { border-bottom: 1px solid #eaecef; padding-bottom: .3em; }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; margin-top: 2em; }
+    h3 { font-size: 1.25em; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    th, td { border: 1px solid #dfe2e5; padding: 8px 13px; }
+    th { background: #f6f8fa; font-weight: 600; }
+    tr:nth-child(even) { background: #f6f8fa; }
+    blockquote { margin: 0; padding: 0 1em; color: #6a737d; border-left: 4px solid #dfe2e5; }
+    img { max-width: 100%; height: auto; display: block; margin: 1.5em auto;
+           border: 1px solid #eaecef; border-radius: 4px; }
+    code { background: #f6f8fa; padding: 2px 5px; border-radius: 3px; font-size: .9em; }
+    a { color: #0366d6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    hr { border: none; border-top: 1px solid #eaecef; margin: 2em 0; }
+    nav { margin-bottom: 2em; padding: 10px 16px; background: #f6f8fa;
+           border-radius: 6px; border: 1px solid #eaecef; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">📓 Ver notebook</a> &nbsp;·&nbsp;
+    <a href="https://github.com/MartukiDev/Spotify-EDA">📁 Repositorio</a>
+  </nav>
+<h1>Análisis completo — Anatomía de una canción popular</h1>
+<p><strong>Universidad de Playa Ancha · Ingeniería en Informática · Primer Semestre 2026</strong><br />
+<strong>Asignatura:</strong> Ciencia de Datos con Python (Optativo II) — Prof. Diego Saavedra Lizana<br />
+<strong>Integrantes:</strong> Martín Maturana · Vicente Tapia · Juan Pablo Poblete · Moisés Espinoza · Benjamín Burgos</p>
+<hr />
+<h2>Pregunta de investigación</h2>
+<blockquote>
+<p>¿Qué características de audio (danceability, energy, valence, tempo) predicen mejor la popularidad de una canción en Spotify, y varía este patrón según el género musical?</p>
+</blockquote>
+<hr />
+<h2>Dataset</h2>
+<p>El dataset corresponde a <a href="https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset">Spotify Tracks Dataset</a> con ~114.000 canciones y 20 columnas originales. Cada fila representa una canción única en el catálogo de Spotify con sus características de audio calculadas por la API de Spotify y su índice de popularidad (0–100), que refleja el volumen de reproducciones recientes.</p>
+<p><strong>Limpieza aplicada:</strong> se eliminaron las columnas <code>track_id</code> (hash interno sin valor analítico) y <code>album_name</code> (irrelevante para la pregunta). Se conservó <code>track_name</code> como identificador legible y <code>track_genre</code> como variable clave del análisis. Se eliminó 1 fila con nulos. No se encontraron duplicados. Se creó <code>duration_min</code> (duración en minutos) y <code>popularity_cat</code> (categorización en cuatro niveles: <em>emerging</em>, <em>up_and_coming</em>, <em>mainstream</em>, <em>chart_topper</em>).</p>
+<hr />
+<h2>1. Distribución de popularidad</h2>
+<p><img alt="Distribución de popularidad" src="../figures/01_popularity_distribucion.png" /></p>
+<p>La distribución de <code>popularity</code> presenta un <strong>pico pronunciado cerca de 0</strong>, lo que indica que la mayoría de canciones del catálogo tienen muy pocas reproducciones recientes. Esto responde en parte a la naturaleza del índice de Spotify: solo refleja actividad reciente, por lo que canciones antiguas o de nicho tienden a tener valores bajos independientemente de su calidad musical.</p>
+<p>La distribución es <strong>asimétrica positiva</strong> (skewness &gt; 0): pocas canciones alcanzan valores altos. Esta característica tiene implicancias directas para el modelo predictivo, ya que los modelos lineales asumen distribuciones más simétricas en la variable objetivo.</p>
+<hr />
+<h2>2. Predictores de audio</h2>
+<h3>2.1 Correlación de Pearson con popularidad</h3>
+<p><img alt="Correlación con popularidad" src="../figures/02_correlacion_popularidad.png" /></p>
+<p>Las variables con mayor correlación con <code>popularity</code> son:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Correlación</th>
+<th>Dirección</th>
+<th>Interpretación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>instrumentalness</code></td>
+<td>negativa</td>
+<td>↓</td>
+<td>Las canciones sin voz tienen menor popularidad en plataformas de streaming masivo</td>
+</tr>
+<tr>
+<td><code>acousticness</code></td>
+<td>negativa</td>
+<td>↓</td>
+<td>Las canciones acústicas tienden a ser menos populares en el catálogo general</td>
+</tr>
+<tr>
+<td><code>loudness</code></td>
+<td>positiva</td>
+<td>↑</td>
+<td>Canciones más fuertes predominan en géneros populares actuales</td>
+</tr>
+<tr>
+<td><code>explicit</code></td>
+<td>positiva</td>
+<td>↑</td>
+<td>Asociado a géneros dominantes como rap/trap que lideran el streaming</td>
+</tr>
+</tbody>
+</table>
+<p>Las <strong>4 variables de la pregunta de investigación</strong> (<code>danceability</code>, <code>energy</code>, <code>valence</code>, <code>tempo</code>) muestran correlaciones moderadas o débiles con la popularidad global. Esto no significa que sean irrelevantes, sino que su efecto <strong>varía por género</strong> — algo que se analiza en la sección 3.</p>
+<p>Todos los coeficientes son bajos (|r| &lt; 0.3), lo que indica que <strong>ninguna variable de audio por sí sola es un predictor fuerte</strong> de popularidad. La popularidad es un fenómeno multifactorial que incluye marketing, posicionamiento en playlists y viralidad en redes sociales — factores no capturados en este dataset.</p>
+<h3>2.2 Variables de la pregunta de investigación vs popularidad</h3>
+<p><img alt="Variables pregunta vs popularidad" src="../figures/03_vars_pregunta_vs_popularidad.png" /></p>
+<p>Cada panel muestra la relación entre una de las 4 variables de la pregunta y la popularidad, con los puntos coloreados por categoría y una línea de tendencia lineal.</p>
+<ul>
+<li><strong><code>danceability</code></strong>: tendencia positiva leve (r &gt; 0). Las canciones más bailables tienden a ser algo más populares, pero la dispersión es alta — hay canciones muy bailables con baja popularidad y viceversa.</li>
+<li><strong><code>energy</code></strong>: tendencia positiva leve. Los géneros energéticos (rock, electrónico, reggaeton) tienen buena representación en valores medios-altos de popularidad.</li>
+<li><strong><code>valence</code></strong>: correlación casi plana. La positividad emocional de una canción no determina su popularidad — tanto canciones tristes como alegres pueden ser exitosas.</li>
+<li><strong><code>tempo</code></strong>: correlación cercana a cero. El tempo no es un predictor significativo de popularidad a nivel global.</li>
+</ul>
+<hr />
+<h2>3. Variación del patrón por género</h2>
+<h3>3.1 Popularidad por género</h3>
+<p><img alt="Popularidad por género" src="../figures/04_popularidad_por_genero.png" /></p>
+<p>La popularidad mediana <strong>varía notablemente entre géneros</strong>. Los géneros con mayor mediana corresponden a estilos contemporáneos con fuerte presencia en el streaming actual, mientras que géneros de nicho presentan medianas más bajas, aunque con alta varianza interna (sus fans los escuchan intensamente pero son una audiencia menor).</p>
+<p>Esto confirma que <strong>el género es un factor moderador</strong> de la relación entre características de audio y popularidad.</p>
+<h3>3.2 Características de audio por género</h3>
+<p><img alt="Audio por género" src="../figures/05_audio_por_genero.png" /></p>
+<p>Las tres variables de la pregunta de investigación con patrón más diferenciado por género son:</p>
+<ul>
+<li><strong><code>danceability</code></strong>: géneros como dance, reggaeton y hip-hop presentan valores consistentemente altos. Géneros como classical o acoustic tienen valores bajos. Sin embargo, alta danceability no garantiza alta popularidad — depende del género.</li>
+<li><strong><code>energy</code></strong>: los géneros más populares del dataset no son necesariamente los más enérgicos. Géneros acústicos tienen energy baja pero algunos tienen popularidad razonable en su nicho.</li>
+<li><strong><code>valence</code></strong>: alta variabilidad dentro de cada género. El estado emocional de la música no sigue un patrón claro ligado a la popularidad del género.</li>
+</ul>
+<p><strong>Conclusión de esta sección:</strong> el patrón <em>característica de audio → popularidad</em> sí varía por género. Una danceability alta predice mejor la popularidad en géneros urbanos que en géneros acústicos o clásicos.</p>
+<hr />
+<h2>4. Modelo predictivo</h2>
+<p>Se entrenaron dos modelos para predecir <code>popularity</code> usando 14 features de audio y metadata:</p>
+<ul>
+<li><strong>Regresión Lineal</strong>: modelo baseline interpretable, asume relaciones lineales</li>
+<li><strong>Árbol de Decisión</strong> (max_depth=5): captura relaciones no lineales e interacciones entre variables</li>
+</ul>
+<h3>4.1 Feature importance</h3>
+<p><img alt="Feature importance" src="../figures/06_feature_importance_dt.png" /></p>
+<p>El Árbol de Decisión asigna mayor importancia a variables que discriminan bien los niveles de popularidad en cada nodo de división. Las variables de la pregunta de investigación (<code>danceability</code>, <code>energy</code>, <code>valence</code>) aparecen en la mitad inferior del ranking, confirmando que no son los predictores más potentes a nivel global. <code>instrumentalness</code> y <code>loudness</code> concentran la mayor parte de la capacidad predictiva del modelo.</p>
+<h3>4.2 Predicción vs popularidad real</h3>
+<p><img alt="Predicción vs real" src="../figures/07_prediccion_vs_real.png" /></p>
+<p>Ambos modelos presentan <strong>R² bajo</strong>, lo que era esperable dado el análisis de correlaciones. El Árbol de Decisión supera a la Regresión Lineal al capturar relaciones no lineales (por ejemplo, umbrales: canciones con <code>instrumentalness &gt; 0.5</code> tienden a tener popularidad baja independientemente de otras variables).</p>
+<p>La dispersión de puntos alrededor de la línea de predicción perfecta es alta, especialmente para canciones con popularidad real entre 0 y 30 — el modelo tiende a sobreestimar su popularidad.</p>
+<hr />
+<h2>5. Conclusiones</h2>
+<h3>Respuesta a la pregunta de investigación</h3>
+<p><strong>¿Qué características predicen mejor la popularidad?</strong><br />
+Las variables con mayor poder predictivo <strong>no son las 4 de la pregunta</strong> (<code>danceability</code>, <code>energy</code>, <code>valence</code>, <code>tempo</code>) sino <code>instrumentalness</code> (negativa), <code>loudness</code> (positiva) y <code>explicit</code> (positiva). Las 4 variables de interés tienen correlaciones débiles con la popularidad global, aunque <code>danceability</code> y <code>energy</code> muestran patrones más claros dentro de géneros específicos.</p>
+<p><strong>¿Varía el patrón por género?</strong><br />
+Sí. La relación entre características de audio y popularidad es moderada por el género. En géneros urbanos (reggaeton, hip-hop, trap), alta <code>danceability</code> y <code>energy</code> sí se asocian con mayor popularidad. En géneros acústicos o clásicos, estas mismas variables tienen menor poder predictivo.</p>
+<h3>Resultado del modelo</h3>
+<p>Ambos modelos presentan R² bajo (&lt; 0.15), indicando que las características intrínsecas de audio explican solo una fracción pequeña de la varianza en popularidad. Esto es consistente con la literatura: la popularidad en Spotify depende fuertemente de factores externos al audio como:</p>
+<ul>
+<li>Posicionamiento en playlists algorítmicas y editoriales</li>
+<li>Presupuesto de marketing del sello discográfico</li>
+<li>Viralidad en redes sociales (TikTok, Instagram)</li>
+<li>Momento de lanzamiento y contexto cultural</li>
+</ul>
+<h3>Limitaciones</h3>
+<ul>
+<li>El dataset no incluye información del artista (seguidores, historial) ni de distribución (playlists)</li>
+<li>La popularidad de Spotify refleja reproducciones <em>recientes</em>, no históricas — canciones antiguas aparecen con popularidad baja aunque hayan sido hits en su momento</li>
+<li>Los modelos usados (lineal y árbol superficial) no capturan interacciones complejas entre variables</li>
+</ul>
+<h3>Trabajo futuro</h3>
+<ol>
+<li>Entrenar modelos separados por género para capturar la variación del patrón</li>
+<li>Incorporar features del artista (popularidad del artista, número de seguidores) como predictores</li>
+<li>Usar modelos de ensemble (Random Forest, Gradient Boosting) para capturar mejor las interacciones no lineales</li>
+<li>Analizar la evolución temporal de la popularidad usando la fecha de lanzamiento como variable</li>
+</ol>
+<hr />
+<p><em>Proyecto desarrollado por: Martín Maturana, Vicente Tapia, Juan Pablo Poblete, Moisés Espinoza, Benjamín Burgos — UPLA 2026</em></p>
+</body>
+</html>
